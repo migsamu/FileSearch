@@ -4,6 +4,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 public class Main {
@@ -22,22 +24,32 @@ public class Main {
 
         FileUtils fileUtils = new FileUtils();
 
-        int ocurrences = 0;
+        Occurrences occurrences = new Occurrences();
 
+        List<Thread> threads = new ArrayList<>();
+        List<CountWordTask> tasks = new ArrayList<>();
+        // Por cada archivo se crea un hilo que busca el texto en eee archivo
         for (File file : folder.listFiles()) {
-            CountWordTask countWordTask = new CountWordTask(word, file);
+            // se crea la tarea que busca en el archivo file el texto word
+            CountWordTask countWordTask = new CountWordTask(word, file, occurrences);
+
+            // Creamos el thread asignandole la tarea
             Thread countWordThread = new Thread(countWordTask);
+            // arrancamos el thread
             countWordThread.start();
+            threads.add(countWordThread);
+            tasks.add(countWordTask);
+        }
+
+        for (Thread t : threads) {
             try {
-                countWordThread.join();
+                t.join();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            ocurrences += countWordTask.getOcurrences();
-
         }
 
-        log.info("La palabra " + word + "aparece " + ocurrences + " veces");
+        log.info("La palabra " + word + " aparece " + occurrences.getOccurrences() + " veces");
 
     }
 
